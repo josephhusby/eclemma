@@ -884,6 +884,19 @@
             </parameter>
          </command>
          <separator
+               name="separator.allcounters"
+               visible="true">
+         </separator>
+         <command
+               commandId="org.eclipse.eclemma.ui.selectCounters"
+               label="%SelectAllCountersMenu.label"
+               style="radio">
+            <parameter
+                  name="type"
+                  value="ALL">
+            </parameter>
+         </command>
+         <separator
                name="separator.options"
                visible="true">
          </separator>

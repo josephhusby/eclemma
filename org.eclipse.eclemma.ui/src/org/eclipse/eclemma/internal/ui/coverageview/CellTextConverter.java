@@ -75,7 +75,12 @@ class CellTextConverter {
   }
 
   String getRatio(Object element) {
-    ICounter counter = getCounter(element);
+    return getRatio(element, settings.getCounters());
+  }
+
+  String getRatio(Object element,
+      org.jacoco.core.analysis.ICoverageNode.CounterEntity entity) {
+    ICounter counter = getCounter(element, entity);
     if (counter.getTotalCount() == 0) {
       return ""; //$NON-NLS-1$
     } else {
@@ -84,20 +89,31 @@ class CellTextConverter {
   }
 
   String getCovered(Object element) {
-    return COUNTER_VALUE.format(getCounter(element).getCoveredCount());
+    return COUNTER_VALUE
+        .format(getCounter(element, settings.getCounters()).getCoveredCount());
   }
 
   String getMissed(Object element) {
-    return COUNTER_VALUE.format(getCounter(element).getMissedCount());
+    return getMissed(element, settings.getCounters());
+  }
+
+  String getMissed(Object element,
+      org.jacoco.core.analysis.ICoverageNode.CounterEntity entity) {
+    return COUNTER_VALUE.format(getCounter(element, entity).getMissedCount());
   }
 
   String getTotal(Object element) {
-    return COUNTER_VALUE.format(getCounter(element).getTotalCount());
+    return getTotal(element, settings.getCounters());
   }
 
-  private ICounter getCounter(Object element) {
-    return CoverageTools.getCoverageInfo(element)
-        .getCounter(settings.getCounters());
+  String getTotal(Object element,
+      org.jacoco.core.analysis.ICoverageNode.CounterEntity entity) {
+    return COUNTER_VALUE.format(getCounter(element, entity).getTotalCount());
+  }
+
+  private ICounter getCounter(Object element,
+      org.jacoco.core.analysis.ICoverageNode.CounterEntity entity) {
+    return CoverageTools.getCoverageInfo(element).getCounter(entity);
   }
 
 }

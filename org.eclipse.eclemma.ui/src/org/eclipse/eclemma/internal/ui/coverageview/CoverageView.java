@@ -148,97 +148,7 @@ public class CoverageView extends ViewPart implements IShowInTarget {
     tree.setLinesVisible(true);
 
     viewer = new TreeViewer(tree);
-    final TreeViewerColumn column0 = new TreeViewerColumn(viewer, SWT.LEFT);
-    column0.setLabelProvider(new CellLabelProvider() {
-
-      private final ILabelProvider delegate = new WorkbenchLabelProvider();
-
-      @Override
-      public void update(ViewerCell cell) {
-        if (cell.getElement() == LOADING_ELEMENT) {
-          cell.setText(UIMessages.CoverageView_loadingMessage);
-          cell.setImage(null);
-        } else {
-          cell.setText(cellTextConverter.getElementName(cell.getElement()));
-          cell.setImage(delegate.getImage(cell.getElement()));
-        }
-      }
-    });
-    sorter.addColumn(column0, COLUMN_ELEMENT);
-
-    final TreeViewerColumn column1 = new TreeViewerColumn(viewer, SWT.RIGHT);
-    column1.setLabelProvider(new OwnerDrawLabelProvider() {
-
-      @Override
-      public void update(ViewerCell cell) {
-        if (cell.getElement() == LOADING_ELEMENT) {
-          cell.setText(""); //$NON-NLS-1$
-        } else {
-          cell.setText(cellTextConverter.getRatio(cell.getElement()));
-        }
-      }
-
-      @Override
-      protected void erase(Event event, Object element) {
-      }
-
-      @Override
-      protected void measure(Event event, Object element) {
-      }
-
-      @Override
-      protected void paint(Event event, Object element) {
-        final ICoverageNode coverage = CoverageTools.getCoverageInfo(element);
-        if (coverage != null) {
-          final ICounter counter = coverage.getCounter(settings.getCounters());
-          RedGreenBar.draw(event, column1.getColumn().getWidth(), counter,
-              maxTotalCache.getMaxTotal(element));
-        }
-      }
-    });
-    sorter.addColumn(column1, COLUMN_RATIO);
-
-    final TreeViewerColumn column2 = new TreeViewerColumn(viewer, SWT.RIGHT);
-    column2.setLabelProvider(new CellLabelProvider() {
-
-      @Override
-      public void update(ViewerCell cell) {
-        if (cell.getElement() == LOADING_ELEMENT) {
-          cell.setText(""); //$NON-NLS-1$
-        } else {
-          cell.setText(cellTextConverter.getCovered(cell.getElement()));
-        }
-      }
-    });
-    sorter.addColumn(column2, COLUMN_COVERED);
-
-    final TreeViewerColumn column3 = new TreeViewerColumn(viewer, SWT.RIGHT);
-    column3.setLabelProvider(new CellLabelProvider() {
-
-      @Override
-      public void update(ViewerCell cell) {
-        if (cell.getElement() == LOADING_ELEMENT) {
-          cell.setText(""); //$NON-NLS-1$
-        } else {
-          cell.setText(cellTextConverter.getMissed(cell.getElement()));
-        }
-      }
-    });
-    sorter.addColumn(column3, COLUMN_MISSED);
-
-    final TreeViewerColumn column4 = new TreeViewerColumn(viewer, SWT.RIGHT);
-    column4.setLabelProvider(new CellLabelProvider() {
-
-      @Override
-      public void update(ViewerCell cell) {
-        if (cell.getElement() == LOADING_ELEMENT) {
-          cell.setText(""); //$NON-NLS-1$
-        } else {
-          cell.setText(cellTextConverter.getTotal(cell.getElement()));
-        }
-      }
-    });
-    sorter.addColumn(column4, COLUMN_TOTAL);
+    createViewerColumns();
 
     viewer.addFilter(new ViewerFilter() {
       @Override
@@ -263,8 +173,6 @@ public class CoverageView extends ViewPart implements IShowInTarget {
         }
       }
     });
-    settings.updateColumnHeaders(viewer);
-    settings.restoreColumnWidth(viewer);
     viewer.setComparator(sorter);
     viewer.setContentProvider(new CoveredElementsContentProvider(settings));
     viewer.setInput(CoverageTools.getJavaModelCoverage());
@@ -358,8 +266,155 @@ public class CoverageView extends ViewPart implements IShowInTarget {
 
   protected void refreshViewer() {
     maxTotalCache.reset();
-    settings.updateColumnHeaders(viewer);
+    int expectedColCount = settings.getCounters() == null ? 13 : 5;
+    if (viewer.getTree().getColumnCount() != expectedColCount) {
+      viewer.getTree().setRedraw(false);
+      createViewerColumns();
+      viewer.getTree().setRedraw(true);
+    } else {
+      settings.updateColumnHeaders(viewer);
+    }
     viewer.refresh();
+  }
+
+  private void createViewerColumns() {
+    for (org.eclipse.swt.widgets.TreeColumn c : viewer.getTree().getColumns()) {
+      c.dispose();
+    }
+
+    final TreeViewerColumn column0 = new TreeViewerColumn(viewer, SWT.LEFT);
+    column0.setLabelProvider(new CellLabelProvider() {
+      private final ILabelProvider delegate = new WorkbenchLabelProvider();
+
+      @Override
+      public void update(ViewerCell cell) {
+        if (cell.getElement() == LOADING_ELEMENT) {
+          cell.setText(UIMessages.CoverageView_loadingMessage);
+          cell.setImage(null);
+        } else {
+          cell.setText(cellTextConverter.getElementName(cell.getElement()));
+          cell.setImage(delegate.getImage(cell.getElement()));
+        }
+      }
+    });
+    sorter.addColumn(column0, COLUMN_ELEMENT);
+
+    if (settings.getCounters() == null) {
+      createRatioColumn(1,
+          org.jacoco.core.analysis.ICoverageNode.CounterEntity.INSTRUCTION);
+      createRatioColumn(2,
+          org.jacoco.core.analysis.ICoverageNode.CounterEntity.BRANCH);
+      createMissedColumn(3,
+          org.jacoco.core.analysis.ICoverageNode.CounterEntity.INSTRUCTION);
+      createMissedColumn(4,
+          org.jacoco.core.analysis.ICoverageNode.CounterEntity.BRANCH);
+      createMissedColumn(5,
+          org.jacoco.core.analysis.ICoverageNode.CounterEntity.COMPLEXITY);
+      createMissedColumn(6,
+          org.jacoco.core.analysis.ICoverageNode.CounterEntity.LINE);
+      createMissedColumn(7,
+          org.jacoco.core.analysis.ICoverageNode.CounterEntity.METHOD);
+      createMissedColumn(8,
+          org.jacoco.core.analysis.ICoverageNode.CounterEntity.CLASS);
+      createTotalColumn(9,
+          org.jacoco.core.analysis.ICoverageNode.CounterEntity.COMPLEXITY);
+      createTotalColumn(10,
+          org.jacoco.core.analysis.ICoverageNode.CounterEntity.LINE);
+      createTotalColumn(11,
+          org.jacoco.core.analysis.ICoverageNode.CounterEntity.METHOD);
+      createTotalColumn(12,
+          org.jacoco.core.analysis.ICoverageNode.CounterEntity.CLASS);
+    } else {
+      createRatioColumn(COLUMN_RATIO, settings.getCounters());
+      createCoveredColumn(COLUMN_COVERED, settings.getCounters());
+      createMissedColumn(COLUMN_MISSED, settings.getCounters());
+      createTotalColumn(COLUMN_TOTAL, settings.getCounters());
+    }
+
+    settings.updateColumnHeaders(viewer);
+    settings.restoreColumnWidth(viewer);
+  }
+
+  private void createRatioColumn(final int columnIdx,
+      final org.jacoco.core.analysis.ICoverageNode.CounterEntity entity) {
+    final TreeViewerColumn column = new TreeViewerColumn(viewer, SWT.RIGHT);
+    column.setLabelProvider(new OwnerDrawLabelProvider() {
+      @Override
+      public void update(ViewerCell cell) {
+        if (cell.getElement() == LOADING_ELEMENT) {
+          cell.setText(""); //$NON-NLS-1$
+        } else {
+          cell.setText(cellTextConverter.getRatio(cell.getElement(), entity));
+        }
+      }
+
+      @Override
+      protected void erase(Event event, Object element) {
+      }
+
+      @Override
+      protected void measure(Event event, Object element) {
+      }
+
+      @Override
+      protected void paint(Event event, Object element) {
+        final ICoverageNode coverage = CoverageTools.getCoverageInfo(element);
+        if (coverage != null) {
+          final ICounter counter = coverage.getCounter(entity);
+          RedGreenBar.draw(event, column.getColumn().getWidth(), counter,
+              maxTotalCache.getMaxTotal(element));
+        }
+      }
+    });
+    sorter.addColumn(column, columnIdx);
+  }
+
+  private void createCoveredColumn(final int columnIdx,
+      final org.jacoco.core.analysis.ICoverageNode.CounterEntity entity) {
+    final TreeViewerColumn column = new TreeViewerColumn(viewer, SWT.RIGHT);
+    column.setLabelProvider(new CellLabelProvider() {
+      @Override
+      public void update(ViewerCell cell) {
+        if (cell.getElement() == LOADING_ELEMENT) {
+          cell.setText(""); //$NON-NLS-1$
+        } else {
+          cell.setText(cellTextConverter.getCovered(cell.getElement()));
+        }
+      }
+    });
+    sorter.addColumn(column, columnIdx);
+  }
+
+  private void createMissedColumn(final int columnIdx,
+      final org.jacoco.core.analysis.ICoverageNode.CounterEntity entity) {
+    final TreeViewerColumn column = new TreeViewerColumn(viewer, SWT.RIGHT);
+    column.setLabelProvider(new CellLabelProvider() {
+      @Override
+      public void update(ViewerCell cell) {
+        if (cell.getElement() == LOADING_ELEMENT) {
+          cell.setText(""); //$NON-NLS-1$
+        } else {
+          cell.setText(cellTextConverter.getMissed(cell.getElement(), entity));
+        }
+      }
+    });
+    sorter.addColumn(column, columnIdx);
+  }
+
+  private void createTotalColumn(final int columnIdx,
+      final org.jacoco.core.analysis.ICoverageNode.CounterEntity entity) {
+    final TreeViewerColumn column = new TreeViewerColumn(viewer, SWT.RIGHT);
+    column.setLabelProvider(new CellLabelProvider() {
+      @Override
+      public void update(ViewerCell cell) {
+        if (cell.getElement() == LOADING_ELEMENT) {
+          cell.setText(""); //$NON-NLS-1$
+        } else {
+          cell.setText(cellTextConverter.getTotal(cell.getElement(), entity));
+        }
+      }
+    });
+    sorter.addColumn(column, columnIdx);
   }
 
   public boolean show(ShowInContext context) {

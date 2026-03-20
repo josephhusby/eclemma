@@ -29,6 +29,8 @@ public class UIMessages extends NLS {
   public static String CoverageViewSelectSessionMenu_label;
   public static String CoverageViewColumnElement_label;
   public static String CoverageViewColumnCoverage_label;
+  public static String CoverageViewColumnCoverageInstructions_label;
+  public static String CoverageViewColumnCoverageBranches_label;
   public static String CoverageViewColumnCoveredInstructions_label;
   public static String CoverageViewColumnCoveredBranches_label;
   public static String CoverageViewColumnCoveredLines_label;

@@ -13,13 +13,7 @@
 package org.eclipse.eclemma.internal.ui.coverageview;
 
 import java.util.Map;
-
-import org.eclipse.core.commands.AbstractHandler;
-import org.eclipse.core.commands.ExecutionEvent;
-import org.eclipse.core.commands.ExecutionException;
-import org.eclipse.ui.commands.IElementUpdater;
-import org.eclipse.ui.menus.UIElement;
-import org.jacoco.core.analysis.ICoverageNode.CounterEntity;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Handler to selects the counter entities shown in the coverage tree.
@@ -48,11 +42,19 @@ class SelectCountersHandler extends AbstractHandler implements IElementUpdater {
   public void updateElement(UIElement element,
       @SuppressWarnings("rawtypes") Map parameters) {
     final CounterEntity type = getType(parameters);
-    element.setChecked(settings.getCounters().equals(type));
+    if (settings.getCounters() == null) {
+      element.setChecked(type == null);
+    } else {
+      element.setChecked(settings.getCounters().equals(type));
+    }
   }
 
   private CounterEntity getType(Map<?, ?> parameters) {
-    return CounterEntity.valueOf((String) parameters.get(TYPE_PARAMETER));
+    String typeStr = (String) parameters.get(TYPE_PARAMETER);
+    if (ViewSettings.KEY_ALL.equals(typeStr)) {
+      return null;
+    }
+    return CounterEntity.valueOf(typeStr);
   }
 
 }
